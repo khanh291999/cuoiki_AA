@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Thuật Toán Graph Sampling</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        .method-btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+            font-size: 0.95em;
+        }
+        .method-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateX(5px);
+        }
+        .method-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            font-weight: bold;
+        }
+        .method-btn strong {
+            display: block;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .method-btn span {
+            display: block;
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+        .param {
+            margin-bottom: 15px;
+        }
+        .param label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .param input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .param input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn-run {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-run:hover {
+            transform: scale(1.05);
+        }
+        .btn-run:active {
+            transform: scale(0.98);
+        }
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .visualization {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            height: 600px;
+            position: relative;
+        }
+        #network {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background: white;
+        }
+        .controls {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .control-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .control-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-box .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-box .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .loading.show {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 7 Thuật Toán Graph Sampling</h1>
+            <p>Visualize và so sánh các phương pháp lấy mẫu đồ thị</p>
+        </div>
+        
+        <div class="content">
+            <div class="sidebar">
+                <div class="card">
+                    <h3>Chọn Thuật Toán</h3>
+                    {% for key, info in samplers.items() %}
+                    <button class="method-btn" data-method="{{ key }}" {% if loop.first %}class="active"{% endif %}>
+                        <strong>{{ info.name }}</strong>
+                        <span>{{ info.desc }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+                
+                <div class="card">
+                    <h3>Loại Đồ Thị</h3>
+                    <button class="method-btn graph-type-btn active" data-type="community">
+                        <strong>Community</strong>
+                        <span>2 cộng đồng riêng biệt</span>
+                    </button>
+                    <button class="method-btn graph-type-btn" data-type="core_periphery">
+                        <strong>Core-Periphery</strong>
+                        <span>Lõi và ngoại vi</span>
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h3>Tham Số</h3>
+                    <div class="param">
+                        <label>Số node gốc (n):</label>
+                        <input type="number" id="n" value="30" min="10" max="50">
+                    </div>
+                    <div class="param">
+                        <label>Số node lấy mẫu (qn):</label>
+                        <input type="number" id="qn" value="15" min="5" max="40">
+                    </div>
+                    <button class="btn-run" onclick="runSampling()">
+                        ▶ Chạy Demo
+                    </button>
+                </div>
+            </div>
+            
+            <div class="main-area">
+                <div class="visualization">
+                    <div class="controls">
+                        <button class="control-btn" id="playBtn" onclick="playAnimation()">▶ Play</button>
+                        <button class="control-btn" id="pauseBtn" onclick="pauseAnimation()" disabled>⏸ Pause</button>
+                        <button class="control-btn" id="resetBtn" onclick="resetAnimation()">↻ Reset</button>
+                    </div>
+                    <div id="network"></div>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <div>Đang tạo đồ thị...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let network = null;
+        let graphData = null;
+        let steps = [];
+        let currentStep = 0;
+        let animationInterval = null;
+        let selectedMethod = 'RN';
+        let selectedGraphType = 'community';
+
+        // Khởi tạo visualization
+        const container = document.getElementById('network');
+        const options = {
+            nodes: {
+                shape: 'dot',
+                size: 20,
+                font: {
+                    size: 14,
+                    color: '#333'
+                },
+                borderWidth: 2,
+                borderWidthSelected: 4
+            },
+            edges: {
+                width: 2,
+                color: { color: '#cccccc', highlight: '#667eea' },
+                smooth: { type: 'continuous' }
+            },
+            physics: {
+                stabilization: { iterations: 100 },
+                barnesHut: { gravitationalConstant: -8000, springLength: 100 }
+            },
+            interaction: {
+                hover: true,
+                zoomView: true
+            }
+        };
+
+        // Chọn phương pháp
+        document.querySelectorAll('.method-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.classList.contains('graph-type-btn')) {
+                    document.querySelectorAll('.graph-type-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedGraphType = this.dataset.type;
+                } else {
+                    document.querySelectorAll('.method-btn:not(.graph-type-btn)').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedMethod = this.dataset.method;
+                }
+            });
+        });
+
+        async function runSampling() {
+            const n = document.getElementById('n').value;
+            const qn = document.getElementById('qn').value;
+            
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('network').style.opacity = '0.3';
+            
+            try {
+                const response = await fetch('/sample', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        method: selectedMethod,
+                        graph_type: selectedGraphType,
+                        n: n,
+                        qn: qn,
+                        seed: Math.floor(Math.random() * 1000)
+                    })
+                });
+                
+                const data = await response.json();
+                graphData = data;
+                steps = data.steps;
+                currentStep = 0;
+                
+                // Vẽ đồ thị
+                drawGraph();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra!');
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('network').style.opacity = '1';
+            }
+        }
+
+        function drawGraph() {
+            const nodes = new vis.DataSet(
+                graphData.graph.nodes.map(n => {
+                    let color = { background: '#e0e0e0', border: '#999' };
+                    
+                    // Màu theo loại đồ thị
+                    if (n.group === 'comm0') {
+                        color = { background: '#ffcdd2', border: '#e57373' };
+                    } else if (n.group === 'comm1') {
+                        color = { background: '#c5e1a5', border: '#9ccc65' };
+                    } else if (n.group === 'core') {
+                        color = { background: '#90caf9', border: '#42a5f5' };
+                    } else if (n.group === 'periphery') {
+                        color = { background: '#fff9c4', border: '#fff176' };
+                    }
+                    
+                    return {
+                        id: n.id,
+                        label: n.label,
+                        color: color
+                    };
+                })
+            );
+            
+            const edges = new vis.DataSet(
+                graphData.graph.edges.map((e, i) => ({
+                    id: i,
+                    from: e.source,
+                    to: e.target
+                }))
+            );
+            
+            network = new vis.Network(container, { nodes, edges }, options);
+        }
+
+        function playAnimation() {
+            if (!graphData) return;
+            
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            
+            animationInterval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    executeStep(currentStep);
+                    currentStep++;
+                } else {
+                    pauseAnimation();
+                }
+            }, 800);
+        }
+
+        function pauseAnimation() {
+            clearInterval(animationInterval);
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        }
+
+        function resetAnimation() {
+            pauseAnimation();
+            currentStep = 0;
+            if (graphData) {
+                drawGraph();
+            }
+        }
+
+        function executeStep(stepIndex) {
+            const step = steps[stepIndex];
+            
+            // Update node color
+            const nodes = network.body.data.nodes;
+            nodes.update({
+                id: step.node,
+                color: {
+                    background: '#667eea',
+                    border: '#764ba2'
+                },
+                font: { color: 'white' }
+            });
+            
+            // Highlight edge if exists
+            if (step.edge) {
+                const edgeId = graphData.graph.edges.findIndex(e => 
+                    (e.source === step.edge[0] && e.target === step.edge[1]) ||
+                    (e.source === step.edge[1] && e.target === step.edge[0])
+                );
+                if (edgeId >= 0) {
+                    network.body.data.edges.update({
+                        id: edgeId,
+                        color: { color: '#667eea' },
+                        width: 4
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

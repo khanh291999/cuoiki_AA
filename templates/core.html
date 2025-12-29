@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Core-Periphery (Divide-and-Conquer)</h2>
+<p class="small-note">
+Bạn chỉ cần đổi <b>sampler</b> và (qn, B) để thấy core proportion / AUC / BE thay đổi.
+Preset Easy/Hard đổi độ rõ của core-periphery trong graph.
+</p>
+
+<form method="post" class="row g-3">
+  <div class="col-md-2"><label class="form-label">n</label><input class="form-control" name="n" value="{{ params.n }}"></div>
+  <div class="col-md-2"><label class="form-label">qn</label><input class="form-control" name="qn" value="{{ params.qn }}"></div>
+  <div class="col-md-2"><label class="form-label">B</label><input class="form-control" name="B" value="{{ params.B }}"></div>
+
+  <div class="col-md-3">
+    <label class="form-label">Sampler</label>
+    <select class="form-select" name="sampler">
+      {% for s in samplers %}
+        <option value="{{ s }}" {% if s==selected %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-3">
+    <label class="form-label">Preset</label>
+    <select class="form-select" name="preset">
+      <option value="easy" {% if preset=="easy" %}selected{% endif %}>Easy (core rõ)</option>
+      <option value="hard" {% if preset=="hard" %}selected{% endif %}>Hard (core mờ)</option>
+    </select>
+  </div>
+
+  <div class="col-md-3 d-flex align-items-end">
+    <button class="btn btn-success w-100" type="submit">Run</button>
+  </div>
+</form>
+
+<div class="row g-4 mt-2">
+  <div class="col-md-6">
+    <div class="card p-2">
+      {{ fig_graph|safe }}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-2">
+      {{ fig_props|safe }}
+    </div>
+  </div>
+</div>
+
+<div class="row mt-3 g-3">
+  <div class="col-md-6">
+    <div class="alert alert-primary mb-0">
+      <b>DC-CP</b><br>
+      AUC = <b>{{ dc.auc if dc.auc is not none else "N/A" }}</b><br>
+      best BE = <b>{{ "%.4f"|format(dc.best_be) }}</b><br>
+      predicted core size (k) = {{ dc.best_k }}<br>
+      time = {{ "%.3f"|format(dc.elapsed_sec) }} s
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="alert alert-secondary mb-0">
+      <b>Full baseline (greedy BE on full graph)</b><br>
+      AUC = <b>{{ full.auc if full.auc is not none else "N/A" }}</b><br>
+      BE = <b>{{ "%.4f"|format(full.be) }}</b><br>
+      time = {{ "%.3f"|format(full.elapsed_sec) }} s
+    </div>
+  </div>
+</div>
+
+<div class="small-note mt-3">
+  Hidden graph params: true_core_size={{ stats.true_core_size }},
+  alpha_core={{ stats.alpha_core }}, p11={{ stats.p11 }}, p22={{ stats.p22 }}
+</div>
+{% endblock %}

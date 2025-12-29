@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-4 bg-light rounded-3">
+  <h1 class="mb-2">Graph sub-sampling demo (Simple UI)</h1>
+  <p class="mb-1">
+    Chỉ còn 2 phần để demo đúng nội dung paper/slide:
+    <b>Community (PACE-style)</b> và <b>Core-Periphery (Divide-and-Conquer)</b>.
+  </p>
+  <p class="small-note mb-0">
+    UI tối giản: chọn <b>sampler</b> + chỉnh <b>n, qn, B</b> + preset <b>Easy/Hard</b>.
+  </p>
+</div>
+
+<div class="row g-3 mt-2">
+  <div class="col-md-6">
+    <div class="card p-3 h-100">
+      <h5>Community (PACE-style)</h5>
+      <p class="small-note mb-2">Sub-sample B lần -> cluster từng subgraph -> stitch matrix -> ARI.</p>
+      <a class="btn btn-primary" href="/community">Open</a>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3 h-100">
+      <h5>Core-Periphery (DC)</h5>
+      <p class="small-note mb-2">Sub-sample -> chạy CP trên subgraph -> aggregate -> AUC/BE.</p>
+      <a class="btn btn-primary" href="/core">Open</a>
+    </div>
+  </div>
+</div>
+
+<hr class="my-4">
+<div class="small-note">
+Samplers: {{ samplers|join(", ") }}
+</div>
+{% endblock %}

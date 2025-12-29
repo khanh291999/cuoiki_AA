@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Community (PACE-style)</h2>
+<p class="small-note">
+Bạn chỉ cần đổi <b>sampler</b> và (qn, B) để thấy ARI thay đổi.
+Preset Easy/Hard chỉ đổi độ khó của graph (p_in/p_out) để demo nhanh.
+</p>
+
+<form method="post" class="row g-3">
+  <div class="col-md-2"><label class="form-label">n</label><input class="form-control" name="n" value="{{ params.n }}"></div>
+  <div class="col-md-2"><label class="form-label">qn</label><input class="form-control" name="qn" value="{{ params.qn }}"></div>
+  <div class="col-md-2"><label class="form-label">B</label><input class="form-control" name="B" value="{{ params.B }}"></div>
+
+  <div class="col-md-3">
+    <label class="form-label">Sampler</label>
+    <select class="form-select" name="sampler">
+      {% for s in samplers %}
+        <option value="{{ s }}" {% if s==selected %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-3">
+    <label class="form-label">Preset</label>
+    <select class="form-select" name="preset">
+      <option value="easy" {% if preset=="easy" %}selected{% endif %}>Easy (dễ tách cụm)</option>
+      <option value="hard" {% if preset=="hard" %}selected{% endif %}>Hard (khó hơn)</option>
+    </select>
+  </div>
+
+  <div class="col-md-3 d-flex align-items-end">
+    <button class="btn btn-success w-100" type="submit">Run</button>
+  </div>
+</form>
+
+<div class="row g-4 mt-2">
+  <div class="col-md-6">
+    <div class="card p-2">
+      {{ fig_graph|safe }}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-2">
+      {{ fig_chat|safe }}
+    </div>
+  </div>
+</div>
+
+<div class="row mt-3 g-3">
+  <div class="col-md-6">
+    <div class="alert alert-primary mb-0">
+      <b>PACE-like</b><br>
+      ARI = <b>{{ "%.4f"|format(pace.ari) }}</b><br>
+      time = {{ "%.3f"|format(pace.elapsed_sec) }} s
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="alert alert-secondary mb-0">
+      <b>Full baseline (spectral on full graph)</b><br>
+      ARI = <b>{{ "%.4f"|format(full.ari) }}</b><br>
+      time = {{ "%.3f"|format(full.elapsed_sec) }} s
+    </div>
+  </div>
+</div>
+
+<div class="small-note mt-3">
+  Hidden graph params: p_in={{ stats.p_in }}, p_out={{ stats.p_out }}, density={{ "%.4f"|format(stats.density) }}
+</div>
+{% endblock %}
