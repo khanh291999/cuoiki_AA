@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>About</h2>
+<ul class="small-note">
+  <li><b>Community (PACE-style)</b>: sub-sample B lần -> cluster -> stitch matrix -> ARI</li>
+  <li><b>Core-Periphery (DC)</b>: sub-sample -> CP on subgraph -> aggregate proportions -> AUC/BE</li>
+</ul>
+<p class="small-note mb-0">
+Hidden settings: seed={{ seed }}, beta_q={{ beta_q }} (stitching threshold quantile).
+</p>
+{% endblock %}
